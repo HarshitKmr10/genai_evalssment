@@ -1,23 +1,28 @@
-import React from 'react'
+import { useState } from 'react'
 import reactLogo from '../images/react.png'
 import tailwindBg from '../images/tailwind_bg.png'
 import typescriptLogo from '../images/typescript.png'
 import tailwindLogo from '../images/tailwind.png'
 import chromeWindowBg from '../images/chromeWindow.png'
+import Draggable from 'react-draggable'
+
 
 export default function ContentApp() {
-  const [isdialogOpen, setIsDialogOpen] = React.useState(true)
+  const [isdialogOpen, setIsDialogOpen] = useState(false)
 
   if (!isdialogOpen) {
     return (
-      <div className="mx-auto p-6">
-        <button
-          onClick={() => setIsDialogOpen(true)}
-          className="bg-white rounded-md p-3 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-        >
-          🧩 Open content script hint <span aria-hidden="true">+</span>
-        </button>
-      </div>
+      <Draggable>
+        <div
+          className="mx-auto p-6">
+          <button
+            onClick={() => setIsDialogOpen(true)}
+            className="bg-white rounded-md p-3 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            🧩 Open content script hint <span aria-hidden="true">+</span>
+          </button>
+        </div>
+      </Draggable>
     )
   }
 

@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 #extension-root {
   position: fixed;
   bottom: 0;

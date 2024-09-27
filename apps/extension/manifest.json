@@ -16,7 +16,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://extension.js.org/*"
+        "https://leetcode.com/*"
       ],
       "js": [
         "./content/scripts.tsx"

@@ -3,22 +3,20 @@
   "name": "extension",
   "description": "An Extension.js example.",
   "version": "0.0.1",
-  "author": {
-    "name": "Your Name",
-    "email": "your@email.com",
-    "url": "https://yourwebsite.com"
-  },
   "license": "MIT",
   "dependencies": {
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
+    "react-draggable": "^4.4.6",
     "tailwindcss": "^3.4.1"
   },
   "devDependencies": {
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.5",
-    "typescript": "5.3.3",
-    "extension": "latest"
+    "extension": "latest",
+    "prettier": "^3.2.5",
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "typescript": "5.3.3"
   },
   "scripts": {
     "dev": "extension dev",
