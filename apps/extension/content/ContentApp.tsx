@@ -5,6 +5,7 @@ import { DragHandleDots2Icon } from "@radix-ui/react-icons";
 import { cn } from "../lib/utils";
 import clsx from "clsx";
 import Chat from "./Chat";
+import { extractProblemText, extractUserCodeText } from "./leetcode";
 
 export default function ContentApp() {
   const [isOpen, setIsOpen] = useState(false);
