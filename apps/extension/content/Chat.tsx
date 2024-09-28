@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { PaperPlaneIcon } from "@radix-ui/react-icons";
+import { PaperPlaneIcon, ReloadIcon } from "@radix-ui/react-icons";
 import { cn } from "../lib/utils";
+import { webSearch, webSearchModel } from "../features/webSearch";
 
 const MAX_TEXTAREA_HEIGHT = 100;
 
@@ -57,8 +58,12 @@ const Chat = () => {
 
   async function askQuestion(query: string) {
     setChatLoading(true);
-    const response = { data: query };
-    setChatMessages((prev) => [...prev, response.data]);
+    await new Promise((res) => setTimeout(res, 3000));
+    // const response = "hiii";
+    const response = await webSearch(query);
+    if (response) {
+      setChatMessages((prev) => [...prev, response]);
+    }
     setChatLoading(false);
   }
 
@@ -73,12 +78,17 @@ const Chat = () => {
                 key={index}
                 className={cn(
                   "message flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
-                  index % 2 === 0 ? "ml-auto bg-black/40" : "bg-muted",
+                  index % 2 === 0 ? "ml-auto bg-neutral-950" : "bg-neutral-700",
                 )}
               >
                 {message}
               </div>
             ))}
+            {chatLoading && (
+              <div className="message flex w-max max-w-[75%] items-center gap-2 rounded-lg bg-neutral-700 px-3 py-2 text-sm">
+                <ReloadIcon className="animate-spin" />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -88,7 +98,7 @@ const Chat = () => {
             ref={textareaRef}
             name="user-message"
             rows={1}
-            className="max-h-[200px] w-full resize-none overflow-y-hidden border-0 bg-transparent pl-2 pr-7 outline-none md:pl-0"
+            className="max-h-[200px] w-full resize-none overflow-y-hidden border-0 bg-transparent pl-2 pr-7 text-foreground outline-none md:pl-0"
             placeholder="Ask Something..."
             onInput={resetTextareaHeight}
             onKeyDown={handleKeyDown}
