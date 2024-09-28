@@ -2,6 +2,26 @@ import { useEffect, useRef, useState } from "react";
 import { PaperPlaneIcon, ReloadIcon } from "@radix-ui/react-icons";
 import { cn } from "../lib/utils";
 import { webSearch, webSearchModel } from "../features/webSearch";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+type CustomLinkProps = {
+  href?: string;
+  children?: React.ReactNode;
+};
+
+function CustomLink({ href, children }: CustomLinkProps) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ color: "#38bdf8", textDecoration: "underline" }}
+    >
+      {children}
+    </a>
+  );
+}
 
 const MAX_TEXTAREA_HEIGHT = 100;
 
@@ -71,7 +91,7 @@ const Chat = () => {
     <div className="relative flex h-full shrink-0 flex-col gap-4 rounded-lg p-2 shadow">
       <h3 className="text-center text-lg font-semibold text-gray-300">Chat</h3>
       <div className="grow">
-        <div className="h-[250px] overflow-auto whitespace-pre-wrap">
+        <div className="h-[400px] overflow-auto whitespace-pre-wrap">
           <div className="mb-16 space-y-2">
             {chatMessages.map((message, index) => (
               <div
@@ -81,7 +101,16 @@ const Chat = () => {
                   index % 2 === 0 ? "ml-auto bg-neutral-950" : "bg-neutral-700",
                 )}
               >
-                {message}
+                {index % 2 === 0 ? (
+                  message
+                ) : (
+                  <Markdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{ a: CustomLink }}
+                  >
+                    {message}
+                  </Markdown>
+                )}
               </div>
             ))}
             {chatLoading && (

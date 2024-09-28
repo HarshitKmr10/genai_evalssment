@@ -4,7 +4,7 @@ import {
   GoogleGenerativeAI,
   SchemaType,
 } from "@google/generative-ai";
-console.log(process.env.EXTENSION_PUBLIC_GOOGLE_API_KEY);
+
 const genAI = new GoogleGenerativeAI(
   process.env.EXTENSION_PUBLIC_GOOGLE_API_KEY!,
 );
@@ -206,6 +206,8 @@ const getRelatedVideosFromYouTubefunctionDeclaration = {
 };
 
 export const webSearchModel = genAI.getGenerativeModel({
+  systemInstruction:
+    "You are a helpful Data Structures and Algorithms teacher. Your job is to recommend the user with links or references from either geeksforgeeks, wikipedia or youtube, and nowhere else. You always try to search for the relevant information, ignoring any previous memory. Do not recommend any information before searching it. Always output the response in markdown format.",
   model: "gemini-1.5-flash",
   tools: [
     {
@@ -238,6 +240,7 @@ export async function webSearch(query: string) {
       getRelatedArticlesFromWikipedia: getRelatedArticlesFromWikipedia,
       getRelatedVideosFromYouTube: getRelatedVideosFromYouTube,
     };
+    console.log({ functionCalls, response });
 
     if (!functionCalls) return response.text();
 

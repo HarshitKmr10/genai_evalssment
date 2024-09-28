@@ -39,7 +39,7 @@ export default function ContentApp() {
 
         <div
           className={cn(
-            "absolute left-0 z-50 hidden w-[300px] rounded-md rounded-tl-none bg-neutral-900 text-slate-100 shadow-2xl",
+            "absolute left-0 z-50 hidden w-[400px] rounded-md rounded-tl-none bg-neutral-900 text-slate-100 shadow-2xl",
             clsx({ block: isOpen }),
           )}
         >
