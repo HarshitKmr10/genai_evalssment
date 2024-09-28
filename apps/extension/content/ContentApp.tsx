@@ -19,7 +19,7 @@ export default function ContentApp() {
         <div
           className={cn(
             buttonVariants({ variant: "default", size: "lg" }),
-            "px-0 pr-4 hover:bg-primary",
+            "bg-neutral-900 px-0 pr-4 text-slate-100 hover:bg-neutral-900",
             clsx({
               "rounded-b-none": isOpen,
               "shadow-lg": !isOpen,
@@ -39,7 +39,7 @@ export default function ContentApp() {
 
         <div
           className={cn(
-            "absolute left-0 z-50 hidden w-[300px] rounded-md rounded-tl-none bg-primary text-primary-foreground shadow-2xl",
+            "absolute left-0 z-50 hidden w-[400px] rounded-md rounded-tl-none bg-neutral-900 text-slate-100 shadow-2xl",
             clsx({ block: isOpen }),
           )}
         >

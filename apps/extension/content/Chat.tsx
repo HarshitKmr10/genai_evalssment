@@ -1,6 +1,27 @@
 import { useEffect, useRef, useState } from "react";
-import { PaperPlaneIcon } from "@radix-ui/react-icons";
+import { PaperPlaneIcon, ReloadIcon } from "@radix-ui/react-icons";
 import { cn } from "../lib/utils";
+import { webSearch, webSearchModel } from "../features/webSearch";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+type CustomLinkProps = {
+  href?: string;
+  children?: React.ReactNode;
+};
+
+function CustomLink({ href, children }: CustomLinkProps) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ color: "#38bdf8", textDecoration: "underline" }}
+    >
+      {children}
+    </a>
+  );
+}
 
 const MAX_TEXTAREA_HEIGHT = 100;
 
@@ -57,8 +78,12 @@ const Chat = () => {
 
   async function askQuestion(query: string) {
     setChatLoading(true);
-    const response = { data: query };
-    setChatMessages((prev) => [...prev, response.data]);
+    await new Promise((res) => setTimeout(res, 3000));
+    // const response = "hiii";
+    const response = await webSearch(query);
+    if (response) {
+      setChatMessages((prev) => [...prev, response]);
+    }
     setChatLoading(false);
   }
 
@@ -66,19 +91,33 @@ const Chat = () => {
     <div className="relative flex h-full shrink-0 flex-col gap-4 rounded-lg p-2 shadow">
       <h3 className="text-center text-lg font-semibold text-gray-300">Chat</h3>
       <div className="grow">
-        <div className="h-[250px] overflow-auto whitespace-pre-wrap">
+        <div className="h-[400px] overflow-auto whitespace-pre-wrap">
           <div className="mb-16 space-y-2">
             {chatMessages.map((message, index) => (
               <div
                 key={index}
                 className={cn(
                   "message flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
-                  index % 2 === 0 ? "ml-auto bg-black/40" : "bg-muted",
+                  index % 2 === 0 ? "ml-auto bg-neutral-950" : "bg-neutral-700",
                 )}
               >
-                {message}
+                {index % 2 === 0 ? (
+                  message
+                ) : (
+                  <Markdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{ a: CustomLink }}
+                  >
+                    {message}
+                  </Markdown>
+                )}
               </div>
             ))}
+            {chatLoading && (
+              <div className="message flex w-max max-w-[75%] items-center gap-2 rounded-lg bg-neutral-700 px-3 py-2 text-sm">
+                <ReloadIcon className="animate-spin" />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -88,7 +127,7 @@ const Chat = () => {
             ref={textareaRef}
             name="user-message"
             rows={1}
-            className="max-h-[200px] w-full resize-none overflow-y-hidden border-0 bg-transparent pl-2 pr-7 outline-none md:pl-0"
+            className="max-h-[200px] w-full resize-none overflow-y-hidden border-0 bg-transparent pl-2 pr-7 text-foreground outline-none md:pl-0"
             placeholder="Ask Something..."
             onInput={resetTextareaHeight}
             onKeyDown={handleKeyDown}
