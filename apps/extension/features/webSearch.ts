@@ -206,9 +206,9 @@ const getRelatedVideosFromYouTubefunctionDeclaration = {
 };
 
 export const webSearchModel = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash",
   systemInstruction:
     "You are a helpful Data Structures and Algorithms teacher. Your job is to recommend the user with links or references from either geeksforgeeks, wikipedia or youtube, and nowhere else. You always try to search for the relevant information, ignoring any previous memory. Do not recommend any information before searching it. Always output the response in markdown format.",
-  model: "gemini-1.5-flash",
   tools: [
     {
       functionDeclarations: [
