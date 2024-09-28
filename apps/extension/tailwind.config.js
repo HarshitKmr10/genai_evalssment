@@ -1,9 +1,10 @@
 const { fontFamily } = require("tailwindcss/defaultTheme")
+const colors = require('tailwindcss/colors')
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
-  content: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"],
+  content: ["./**/*.{ts,tsx}"],
   theme: {
     container: {
       center: true,
@@ -14,6 +15,7 @@ module.exports = {
     },
     extend: {
       colors: {
+        // ...colors,
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
