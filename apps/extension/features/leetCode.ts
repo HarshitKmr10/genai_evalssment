@@ -5,11 +5,9 @@ import {
   SchemaType,
 } from "@google/generative-ai";
 
-import * as dotenv from 'dotenv';
-
-dotenv.config({ path: '.env.local' });
-
-const genAI = new GoogleGenerativeAI(process.env.EXTENSION_PUBLIC_GOOGLE_API_KEY!);
+const genAI = new GoogleGenerativeAI(
+  process.env.EXTENSION_PUBLIC_GOOGLE_API_KEY!,
+);
 
 const leetcodeApiBase = "https://alfa-leetcode-api.onrender.com";
 
@@ -31,7 +29,11 @@ interface LeetCodeArgs {
   titleSlug: string;
 }
 
-async function fetchSimilarProblems({ tags }: { tags: string[] }): Promise<LeetCodeQuestion[]> {
+async function fetchSimilarProblems({
+  tags,
+}: {
+  tags: string[];
+}): Promise<LeetCodeQuestion[]> {
   const tagString = tags.join("+");
   const url = `${leetcodeApiBase}/problems?tags=${tagString}&limit=1`;
 
@@ -49,22 +51,26 @@ async function fetchSimilarProblems({ tags }: { tags: string[] }): Promise<LeetC
     const detailResponse = await axios.get(detailUrl);
     const problemDetails = detailResponse.data;
 
-    return [{
-      title: problemDetails.questionTitle,
-      url: `https://leetcode.com/problems/${problemDetails.titleSlug}`,
-      difficulty: problemDetails.difficulty,
-      tags: problemDetails.topicTags.map((tag: any) => tag.name),
-      description: problemDetails.question,  
-    }];
-    
+    return [
+      {
+        title: problemDetails.questionTitle,
+        url: `https://leetcode.com/problems/${problemDetails.titleSlug}`,
+        difficulty: problemDetails.difficulty,
+        tags: problemDetails.topicTags.map((tag: any) => tag.name),
+        description: problemDetails.question,
+      },
+    ];
   } catch (error) {
     console.error("Error fetching similar problems:", error);
     return [];
   }
 }
 
-
-async function fetchOfficialSolution({ titleSlug }: { titleSlug: string }): Promise<OfficialSolution | null> {
+async function fetchOfficialSolution({
+  titleSlug,
+}: {
+  titleSlug: string;
+}): Promise<OfficialSolution | null> {
   const url = `${leetcodeApiBase}/officialSolution?titleSlug=${titleSlug}`;
 
   try {
@@ -76,7 +82,7 @@ async function fetchOfficialSolution({ titleSlug }: { titleSlug: string }): Prom
       const relevantSolution = extractRelevantSolution(content);
 
       return {
-        solution: relevantSolution,  
+        solution: relevantSolution,
         url: `https://leetcode.com/problems/${titleSlug}/solution/`,
       };
     } else {
@@ -90,24 +96,29 @@ async function fetchOfficialSolution({ titleSlug }: { titleSlug: string }): Prom
 }
 
 function extractRelevantSolution(content: string): string {
-  content = content.replace(/## Video Solution[\s\S]+?(?=## Solution Article)/g, '');
-  content = content.replace(/<iframe[^>]*><\/iframe>/g, ''); 
-  content = content.replace(/<[^>]+>/g, ''); 
+  content = content.replace(
+    /## Video Solution[\s\S]+?(?=## Solution Article)/g,
+    "",
+  );
+  content = content.replace(/<iframe[^>]*><\/iframe>/g, "");
+  content = content.replace(/<[^>]+>/g, "");
   content = content.trim();
   const sections = content.split(/---/g);
-  const relevantSections = sections.filter(section => 
-    section.includes('Approach') || section.includes('Algorithm') || section.includes('Complexity')
+  const relevantSections = sections.filter(
+    (section) =>
+      section.includes("Approach") ||
+      section.includes("Algorithm") ||
+      section.includes("Complexity"),
   );
-  return relevantSections.join('\n\n').trim();
+  return relevantSections.join("\n\n").trim();
 }
-
-
 
 // Define function declarations
 
 const fetchSimilarProblemsFunctionDeclaration: FunctionDeclaration = {
   name: "fetchSimilarProblems",
-  description: "Fetch similar LeetCode problems based on tags and return detailed problem information using the titleSlug.",
+  description:
+    "Fetch similar LeetCode problems based on tags and return detailed problem information using the titleSlug.",
   parameters: {
     type: SchemaType.OBJECT,
     properties: {
@@ -125,40 +136,41 @@ const fetchSimilarProblemsFunctionDeclaration: FunctionDeclaration = {
 
 const fetchOfficialSolutionFunctionDeclaration: FunctionDeclaration = {
   name: "fetchOfficialSolution", // This matches the actual function name
-  description: "Fetch the solution for a LeetCode problem and provides the official solution url",
+  description:
+    "Fetch the solution for a LeetCode problem and provides the official solution url",
   parameters: {
     type: SchemaType.OBJECT,
     properties: {
       titleSlug: {
         type: SchemaType.STRING,
-        description: "The titleSlug of the problem to get the official solution.",
+        description:
+          "The titleSlug of the problem to get the official solution.",
       },
     },
     required: ["titleSlug"],
   },
 };
 
-
-export const  leetCodeModel = genAI.getGenerativeModel({
-    systemInstruction:
+export const leetCodeModel = genAI.getGenerativeModel({
+  systemInstruction:
     "You are a helpful Data Structures and Algorithms assistant specialised in LeetCode problems. Your job is to recommend the user with links of the problems and their solutions. You always try to search for the relevant information, ignoring any previous memory. Do not recommend any information before searching it. Always output the response in markdown format.",
-    model: "gemini-1.5-flash",
-    tools: [
-      {
-        functionDeclarations: [
-          fetchSimilarProblemsFunctionDeclaration,
-          fetchOfficialSolutionFunctionDeclaration,
-          // fetchDissimilarProblemFunctionDeclaration, // Can be added later
-        ],
-      },
-    ],
-    generationConfig: {
-      temperature: 0.1,
-      topK: 1,
-      topP: 1,
-      maxOutputTokens: 2048,
+  model: "gemini-1.5-flash",
+  tools: [
+    {
+      functionDeclarations: [
+        fetchSimilarProblemsFunctionDeclaration,
+        fetchOfficialSolutionFunctionDeclaration,
+        // fetchDissimilarProblemFunctionDeclaration, // Can be added later
+      ],
     },
-  });
+  ],
+  generationConfig: {
+    temperature: 0.1,
+    topK: 1,
+    topP: 1,
+    maxOutputTokens: 2048,
+  },
+});
 
 const chat = leetCodeModel.startChat();
 
@@ -173,29 +185,27 @@ export async function leetCode(query: string) {
       fetchOfficialSolution: fetchOfficialSolution,
       // fetchDissimilarProblem: fetchDissimilarProblem, // Add later if needed
     };
+    if (!functionCalls) return result.response.text();
 
-    if (functionCalls && functionCalls.length > 0) {
-      const functionResponses = await Promise.all(
-        functionCalls.map(async (call) => {
-          const apiResponse = await functions[call.name](call.args);
-          console.log("LeetCode Suggestions:", apiResponse);
-          return {
-            functionResponse: {
-              name: call.name,
-              response: {
-                content: apiResponse,
-              },
+    const functionResponses = await Promise.all(
+      functionCalls.map(async (call) => {
+        const apiResponse = await functions[call.name](call.args);
+        console.log("LeetCode Suggestions:", apiResponse);
+        return {
+          functionResponse: {
+            name: call.name,
+            response: {
+              content: apiResponse,
             },
-          };
-        })
-      );
+          },
+        };
+      }),
+    );
 
-      const result2 = await chat.sendMessage(functionResponses);    
-      console.log(result2.response.text());
-      return result2.response.text();
-    }
+    const result2 = await chat.sendMessage(functionResponses);
+    console.log(result2.response.text());
+    return result2.response.text();
   } catch (error) {
     console.error("Error handling query:", error);
   }
 }
-
