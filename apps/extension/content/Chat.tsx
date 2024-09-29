@@ -4,6 +4,7 @@ import { cn } from "../lib/utils";
 import { webSearch, webSearchModel } from "../features/webSearch";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { highlightWords } from "../features/highlightWords";
 
 type CustomLinkProps = {
   href?: string;
@@ -58,9 +59,8 @@ const Chat = () => {
 
   function userCannotSendMessage() {
     return (
-      chatMessages.length % 2 !== 0 ||
-      textareaRef.current!.value === "" ||
-      chatLoading
+      // chatMessages.length % 2 !== 0 ||
+      textareaRef.current!.value === "" || chatLoading
     );
   }
 
@@ -78,9 +78,8 @@ const Chat = () => {
 
   async function askQuestion(query: string) {
     setChatLoading(true);
-    await new Promise((res) => setTimeout(res, 3000));
-    // const response = "hiii";
-    const response = await webSearch(query);
+    // const response = await webSearch(query);
+    const response = await highlightWords(query);
     if (response) {
       setChatMessages((prev) => [...prev, response]);
     }

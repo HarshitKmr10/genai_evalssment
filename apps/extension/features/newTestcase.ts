@@ -1,10 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-import * as dotenv from 'dotenv';
-
-dotenv.config({ path: '.env.local' });
-
-const genAI = new GoogleGenerativeAI(process.env.EXTENSION_PUBLIC_GOOGLE_API_KEY!);
+const genAI = new GoogleGenerativeAI(
+  process.env.EXTENSION_PUBLIC_GOOGLE_API_KEY!,
+);
 
 export const testCaseModel =  genAI.getGenerativeModel({
     model: "gemini-1.5-flash",
@@ -26,7 +24,7 @@ export async function testCase(query: string) {
     console.log(response.response.text());
     return response.response.text();
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
     throw error;
   }
 }
