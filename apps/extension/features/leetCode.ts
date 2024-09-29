@@ -13,53 +13,32 @@ const genAI = new GoogleGenerativeAI(process.env.EXTENSION_PUBLIC_GOOGLE_API_KEY
 
 const leetcodeApiBase = "https://alfa-leetcode-api.onrender.com";
 
-interface LeetCodeQuestion {
-  title: string;
-  url: string;
-  difficulty: string;
-  tags: string[];
-  description: string;
-}
-
 interface OfficialSolution {
   solution: string;
   url: string;
 }
 
-interface LeetCodeArgs {
-  tags: string[];
-  titleSlug: string;
-}
-
-async function fetchSimilarProblems({ tags }: { tags: string[] }): Promise<LeetCodeQuestion[]> {
-  const tagString = tags.join("+");
-  const url = `${leetcodeApiBase}/problems?tags=${tagString}&limit=1`;
-
+async function fetchSimilarProblems({ titleSlug }: { titleSlug: string }) {
   try {
-    const response = await axios.get(url);
-    const problemList = response.data.problemsetQuestionList;
-
-    if (!problemList || problemList.length === 0) {
-      console.warn("No problems found for the given tags.");
-      return [];
-    }
-    const { titleSlug } = problemList[0];
-
-    const detailUrl = `${leetcodeApiBase}/select?titleSlug=${titleSlug}`;
-    const detailResponse = await axios.get(detailUrl);
-    const problemDetails = detailResponse.data;
-
-    return [{
-      title: problemDetails.questionTitle,
-      url: `https://leetcode.com/problems/${problemDetails.titleSlug}`,
-      difficulty: problemDetails.difficulty,
-      tags: problemDetails.topicTags.map((tag: any) => tag.name),
-      description: problemDetails.question,  
-    }];
-    
+  const url = `${leetcodeApiBase}/select?titleSlug=${titleSlug}`;
+  const response = await axios.get(url);
+  if (response.status !== 200) {
+    throw new Error('Failed to fetch leetcode question');
+  }
+    const data = response.data;
+  const similarQuestions = JSON.parse(data.similarQuestions || '[]');
+    const similarQuestionsWithUrls = similarQuestions.map((question: any) => ({
+      ...question,
+      url: `https://leetcode.com/problems/${question.titleSlug}`
+    }));
+    console.log(similarQuestionsWithUrls);
+    return {
+      ...data,
+      similarQuestions: similarQuestionsWithUrls
+    };
   } catch (error) {
-    console.error("Error fetching similar problems:", error);
-    return [];
+    console.error('Error fetching LeetCode question info:', error);
+    throw new Error('Failed to fetch LeetCode question information');
   }
 }
 
@@ -107,7 +86,7 @@ function extractRelevantSolution(content: string): string {
 
 const fetchSimilarProblemsFunctionDeclaration: FunctionDeclaration = {
   name: "fetchSimilarProblems",
-  description: "Fetch similar LeetCode problems based on tags and return detailed problem information using the titleSlug.",
+  description: "Fetch similar LeetCode problems using the titleSlug.",
   parameters: {
     type: SchemaType.OBJECT,
     properties: {

@@ -6,11 +6,6 @@ dotenv.config({ path: '.env.local' });
 
 const genAI = new GoogleGenerativeAI(process.env.EXTENSION_PUBLIC_GOOGLE_API_KEY!);
 
-interface TestCase {
-  testCase: string;
-  expectedOutput: string;
-}
-
 export const testCaseModel =  genAI.getGenerativeModel({
     model: "gemini-1.5-flash",
     systemInstruction:
