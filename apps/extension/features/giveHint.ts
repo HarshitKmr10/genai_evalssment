@@ -25,7 +25,7 @@ export const giveHintModel = genAI.getGenerativeModel({
 const chat = giveHintModel.startChat();
 const conversationHistory: string[] = [];
 
-export const sendMessage = async (userInput: string) => {
+export async function giveHint(userInput: string) {
   conversationHistory.push(`You: ${userInput}`);
 
   try {
