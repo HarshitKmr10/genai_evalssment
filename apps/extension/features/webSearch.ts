@@ -240,7 +240,6 @@ export async function webSearch(query: string) {
       getRelatedArticlesFromWikipedia: getRelatedArticlesFromWikipedia,
       getRelatedVideosFromYouTube: getRelatedVideosFromYouTube,
     };
-    console.log({ functionCalls, response });
 
     if (!functionCalls) return response.text();
 
