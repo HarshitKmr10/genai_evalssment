@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { PaperPlaneIcon, ReloadIcon } from "@radix-ui/react-icons";
 import { cn } from "../lib/utils";
-import { webSearch, webSearchModel } from "../features/webSearch";
+import { highlightWords } from "../features/highlightWords";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { highlightWords } from "../features/highlightWords";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "../components/ui/select"; // Import Shadcn components
+import { Button } from "../components/ui/button";
 
 type CustomLinkProps = {
   href?: string;
@@ -30,6 +37,24 @@ const Chat = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatMessages, setChatMessages] = useState<string[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
+  const [utterance, setUtterance] = useState<SpeechSynthesisUtterance | null>(
+    null,
+  );
+  const [speechRate, setSpeechRate] = useState(1.2); // Default speech rate
+  const [currentPosition, setCurrentPosition] = useState(0);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  useEffect(() => {
+    if (chatMessages.length === 0) return;
+    const lastMessage = chatMessages[chatMessages.length - 1];
+    if (chatMessages.length % 2 === 0) {
+      speakMessage(lastMessage, speechRate);
+    }
+    document
+      .querySelectorAll(".message")
+      ?.item(chatMessages.length - 1)
+      ?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, speechRate]);
 
   function resetTextareaHeight() {
     const textarea = textareaRef.current!;
@@ -49,19 +74,8 @@ const Chat = () => {
     }
   }
 
-  useEffect(() => {
-    if (chatMessages.length === 0) return;
-    document
-      .querySelectorAll(".message")
-      ?.item(chatMessages.length - 1)
-      ?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages]);
-
   function userCannotSendMessage() {
-    return (
-      // chatMessages.length % 2 !== 0 ||
-      textareaRef.current!.value === "" || chatLoading
-    );
+    return textareaRef.current!.value === "" || chatLoading;
   }
 
   function handleClick() {
@@ -78,7 +92,6 @@ const Chat = () => {
 
   async function askQuestion(query: string) {
     setChatLoading(true);
-    // const response = await webSearch(query);
     const response = await highlightWords(query);
     if (response) {
       setChatMessages((prev) => [...prev, response]);
@@ -86,9 +99,120 @@ const Chat = () => {
     setChatLoading(false);
   }
 
+  function speakMessage(message: string, rate: number) {
+    if (utterance) {
+      window.speechSynthesis.cancel();
+    }
+
+    const newUtterance = new SpeechSynthesisUtterance(message);
+    newUtterance.lang = "en-US";
+    newUtterance.pitch = 1; // Default pitch
+    newUtterance.rate = rate; // Use the passed rate
+
+    newUtterance.onboundary = (event) => {
+      if (event.charIndex >= 0) {
+        setCurrentPosition(event.charIndex); // Track position
+      }
+    };
+
+    newUtterance.onstart = () => {
+      setIsSpeaking(true); // Set speaking state to true
+    };
+
+    newUtterance.onend = () => {
+      setIsSpeaking(false); // Set speaking state to false when done
+      setCurrentPosition(0); // Reset position if needed
+    };
+
+    window.speechSynthesis.speak(newUtterance);
+    setUtterance(newUtterance);
+  }
+
+  function changeRateAndResume(message: string) {
+    if (currentPosition < message.length) {
+      const newMessagePart = message.slice(currentPosition);
+      stopSpeech(); // Stop current speech
+      speakMessage(newMessagePart, speechRate); // Pass the current rate
+    }
+  }
+
+  function pauseSpeech() {
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.pause();
+      setIsSpeaking(false); // Set speaking state to false
+    }
+  }
+
+  function resumeSpeech() {
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+      setIsSpeaking(true); // Set speaking state to true
+    }
+  }
+
+  function stopSpeech() {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false); // Set speaking state to false
+    setCurrentPosition(0); // Reset position if needed
+  }
+
   return (
     <div className="relative flex h-full shrink-0 flex-col gap-4 rounded-lg p-2 shadow">
-      <h3 className="text-center text-lg font-semibold text-gray-300">Chat</h3>
+      <div className="flex items-center justify-between px-4">
+        <h3 className="text-lg font-semibold text-gray-300">Chat</h3>
+        {chatMessages.length > 0 && chatMessages.length % 2 === 0 && (
+          <div className="flex items-center gap-2">
+            <Select
+              value={speechRate.toString()}
+              onValueChange={(value) => {
+                setSpeechRate(parseFloat(value));
+                changeRateAndResume(chatMessages[chatMessages.length - 1]); // Resume speaking
+              }}
+            >
+              <SelectTrigger className="w-20">
+                <SelectValue placeholder="Rate" />
+              </SelectTrigger>
+              <SelectContent className="z-[999999] bg-neutral-900 text-foreground">
+                <SelectItem value="0.5">0.5x</SelectItem>
+                <SelectItem value="1">1.0x</SelectItem>
+                <SelectItem value="1.2">1.2x</SelectItem>
+                <SelectItem value="1.5">1.5x</SelectItem>
+                <SelectItem value="2">2.0x</SelectItem>
+              </SelectContent>
+            </Select>
+            {isSpeaking && (
+              <Button
+                onClick={pauseSpeech}
+                variant="default"
+                size="sm"
+                className="bg-blue-500 text-white hover:bg-blue-500/80"
+              >
+                Pause
+              </Button>
+            )}
+            {!isSpeaking && (
+              <Button
+                onClick={resumeSpeech}
+                variant="default"
+                size="sm"
+                className="bg-green-500 text-white hover:bg-green-500/80"
+              >
+                Resume
+              </Button>
+            )}
+            {isSpeaking && (
+              <Button
+                onClick={stopSpeech}
+                variant="destructive"
+                size="sm"
+                disabled={!isSpeaking} // Disable if not speaking
+              >
+                Stop
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
       <div className="grow">
         <div className="h-[400px] overflow-auto whitespace-pre-wrap">
           <div className="mb-16 space-y-2">
