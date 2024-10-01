@@ -6,6 +6,9 @@
   "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.20.0",
+    "@langchain/core": "^0.3.5",
+    "@langchain/langgraph": "^0.2.10",
+    "@langchain/openai": "^0.3.4",
     "@radix-ui/react-dropdown-menu": "^2.1.1",
     "@radix-ui/react-icons": "^1.3.0",
     "@radix-ui/react-select": "^2.1.1",
@@ -13,19 +16,22 @@
     "axios": "^1.7.7",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "langchain": "^0.3.2",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-draggable": "^4.4.6",
     "react-markdown": "^9.0.1",
     "remark-gfm": "^4.0.0",
     "tailwind-merge": "^2.5.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.5",
     "autoprefixer": "^10.4.20",
+    "dotenv": "^16.4.5",
     "extension": "latest",
     "postcss": "^8.4.47",
     "prettier": "^3.2.5",
