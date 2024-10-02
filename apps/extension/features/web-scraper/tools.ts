@@ -1,6 +1,7 @@
 import { tool } from "@langchain/core/tools";
 import axios from "axios";
 import { z } from "zod";
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 
 interface Article {
   title: string;
@@ -53,36 +54,16 @@ export const getRelatedArticlesFromGFG = tool(
 
 export const getRelatedArticlesFromWikipedia = tool(
   async (input) => {
-    const url = `https://en.wikipedia.org/w/api.php`;
-    const params = {
-      action: "query",
-      format: "json",
-      list: "search",
-      srsearch: input.query,
-      srlimit: input.numResults,
-      srprop: "snippet",
-    };
+    const wikipediaTool = new TavilySearchResults({
+      apiKey: process.env.EXTENSION_PUBLIC_TAVILY_API_KEY,
+      maxResults: input.numResults,
+      kwargs: {
+        include_domains: ["wikipedia.org"],
+      },
+    });
 
-    try {
-      const response = await axios.get(url, { params });
-      const data = response.data;
-
-      const searchResults: Article[] = [];
-      const formattedResults = data.query?.search
-        .slice(0, input.numResults)
-        .map((article: any) => {
-          searchResults.push({
-            title: article.title,
-            url: `https://en.wikipedia.org/?curid=${article.pageid}`,
-            snippet: article.snippet,
-          });
-        });
-
-      return JSON.stringify(searchResults);
-    } catch (error) {
-      console.error("Error fetching data from Wikipedia:", error);
-      return [];
-    }
+    const output = await wikipediaTool.invoke({ input: input.query });
+    return JSON.stringify(output);
   },
   {
     name: "get_related_articles_from_wikipedia",
@@ -98,51 +79,16 @@ export const getRelatedArticlesFromWikipedia = tool(
 
 export const getRelatedVideosFromYouTube = tool(
   async (input) => {
-    console.log("I am being called", input.query);
-    const searchQuery = encodeURIComponent(input.query);
-    const url = `https://www.youtube.com/results?search_query=${searchQuery}`;
+    const youtubeTool = new TavilySearchResults({
+      apiKey: process.env.EXTENSION_PUBLIC_TAVILY_API_KEY,
+      maxResults: input.numResults,
+      kwargs: {
+        include_domains: ["youtube.com"],
+      },
+    });
 
-    const headers = {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    };
-
-    try {
-      const response = await axios.get(url, { headers });
-      const matches = response.data.match(
-        /var ytInitialData = (.+?);<\/script>/,
-      );
-
-      if (matches) {
-        const data = JSON.parse(matches[1]);
-        const videoData =
-          data.contents.twoColumnSearchResultsRenderer.primaryContents
-            .sectionListRenderer.contents[0].itemSectionRenderer.contents;
-
-        const videoResults: Video[] = [];
-        const formattedResults = videoData
-          .filter((item: any) => item.videoRenderer)
-          .slice(0, input.numResults)
-          .map((item: any) => {
-            const video = item.videoRenderer;
-            videoResults.push({
-              title: video.title.runs[0].text,
-              url: `https://www.youtube.com/watch?v=${video.videoId}`,
-              channel: video.ownerText.runs[0].text,
-              views: video.viewCountText?.simpleText || "N/A",
-            });
-          });
-
-        console.log(videoResults);
-        return JSON.stringify(videoResults);
-      } else {
-        console.error("Could not extract video data from YouTube page.");
-        return [];
-      }
-    } catch (error) {
-      console.error("Error fetching data from YouTube:", error);
-      return [];
-    }
+    const output = await youtubeTool.invoke({ input: input.query });
+    return JSON.stringify(output);
   },
   {
     name: "get_related_videos_from_youtube",
