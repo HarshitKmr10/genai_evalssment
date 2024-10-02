@@ -5,7 +5,7 @@
   "name": "DSA Tutor",
   "description": "A socratic teacher for DSA problems.",
   "icons": {
-    "48": "images/extension_48.png"
+    "48": "images/icon_48.png"
   },
   "background": {
     "chromium:service_worker": "background.ts",
