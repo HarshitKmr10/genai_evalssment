@@ -2,8 +2,8 @@
   "name": "dsa-tutor",
   "private": true,
   "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev",
+    "build": "turbo build --filter extension",
+    "dev": "turbo dev --filter extension",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
