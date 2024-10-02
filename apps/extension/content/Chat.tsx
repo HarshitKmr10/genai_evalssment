@@ -18,6 +18,11 @@ type CustomLinkProps = {
   children?: React.ReactNode;
 };
 
+type Message = {
+  role: "user" | "assistant";
+  text: string;
+};
+
 function CustomLink({ href, children }: CustomLinkProps) {
   return (
     <a
@@ -35,7 +40,7 @@ const MAX_TEXTAREA_HEIGHT = 100;
 
 const Chat = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [chatMessages, setChatMessages] = useState<string[]>([]);
+  const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
   const [utterance, setUtterance] = useState<SpeechSynthesisUtterance | null>(
     null,
@@ -46,9 +51,9 @@ const Chat = () => {
 
   useEffect(() => {
     if (chatMessages.length === 0) return;
-    const lastMessage = chatMessages[chatMessages.length - 1];
-    if (chatMessages.length % 2 === 0) {
-      speakMessage(lastMessage, speechRate);
+    const lastMessage = chatMessages.at(-1);
+    if (lastMessage?.role === "assistant") {
+      speakMessage(lastMessage.text, speechRate);
     }
     document
       .querySelectorAll(".message")
@@ -85,7 +90,7 @@ const Chat = () => {
 
   function addUserMessage() {
     const message = textareaRef.current!.value;
-    setChatMessages((prev) => [...prev, message]);
+    setChatMessages((prev) => [...prev, { role: "user", text: message }]);
     textareaRef.current!.value = "";
     askQuestion(message);
   }
@@ -94,7 +99,10 @@ const Chat = () => {
     setChatLoading(true);
     const response = await askDSATutor(query);
     if (response) {
-      setChatMessages((prev) => [...prev, response]);
+      setChatMessages((prev) => [
+        ...prev,
+        { role: "assistant", text: response },
+      ]);
     }
     setChatLoading(false);
   }
@@ -160,58 +168,59 @@ const Chat = () => {
     <div className="relative flex h-full shrink-0 flex-col gap-4 rounded-lg p-2 shadow">
       <div className="flex items-center justify-between px-4">
         <h3 className="text-lg font-semibold text-gray-300">Chat</h3>
-        {chatMessages.length > 0 && chatMessages.length % 2 === 0 && (
-          <div className="flex items-center gap-2">
-            <Select
-              value={speechRate.toString()}
-              onValueChange={(value) => {
-                setSpeechRate(parseFloat(value));
-                changeRateAndResume(chatMessages[chatMessages.length - 1]); // Resume speaking
-              }}
-            >
-              <SelectTrigger className="w-20">
-                <SelectValue placeholder="Rate" />
-              </SelectTrigger>
-              <SelectContent className="z-[999999] bg-neutral-900 text-foreground">
-                <SelectItem value="0.5">0.5x</SelectItem>
-                <SelectItem value="1">1.0x</SelectItem>
-                <SelectItem value="1.2">1.2x</SelectItem>
-                <SelectItem value="1.5">1.5x</SelectItem>
-                <SelectItem value="2">2.0x</SelectItem>
-              </SelectContent>
-            </Select>
-            {isSpeaking && (
-              <Button
-                onClick={pauseSpeech}
-                variant="default"
-                size="sm"
-                className="bg-blue-500 text-white hover:bg-blue-500/80"
+        {chatMessages.length > 0 &&
+          chatMessages.at(-1)?.role === "assistant" && (
+            <div className="flex items-center gap-2">
+              <Select
+                value={speechRate.toString()}
+                onValueChange={(value) => {
+                  setSpeechRate(parseFloat(value));
+                  changeRateAndResume(chatMessages.at(-1)?.text ?? ""); // Resume speaking
+                }}
               >
-                Pause
-              </Button>
-            )}
-            {!isSpeaking && (
-              <Button
-                onClick={resumeSpeech}
-                variant="default"
-                size="sm"
-                className="bg-green-500 text-white hover:bg-green-500/80"
-              >
-                Resume
-              </Button>
-            )}
-            {isSpeaking && (
-              <Button
-                onClick={stopSpeech}
-                variant="destructive"
-                size="sm"
-                disabled={!isSpeaking} // Disable if not speaking
-              >
-                Stop
-              </Button>
-            )}
-          </div>
-        )}
+                <SelectTrigger className="w-20">
+                  <SelectValue placeholder="Rate" />
+                </SelectTrigger>
+                <SelectContent className="z-[999999] bg-neutral-900 text-foreground">
+                  <SelectItem value="0.5">0.5x</SelectItem>
+                  <SelectItem value="1">1.0x</SelectItem>
+                  <SelectItem value="1.2">1.2x</SelectItem>
+                  <SelectItem value="1.5">1.5x</SelectItem>
+                  <SelectItem value="2">2.0x</SelectItem>
+                </SelectContent>
+              </Select>
+              {isSpeaking && (
+                <Button
+                  onClick={pauseSpeech}
+                  variant="default"
+                  size="sm"
+                  className="bg-blue-500 text-white hover:bg-blue-500/80"
+                >
+                  Pause
+                </Button>
+              )}
+              {!isSpeaking && (
+                <Button
+                  onClick={resumeSpeech}
+                  variant="default"
+                  size="sm"
+                  className="bg-green-500 text-white hover:bg-green-500/80"
+                >
+                  Resume
+                </Button>
+              )}
+              {isSpeaking && (
+                <Button
+                  onClick={stopSpeech}
+                  variant="destructive"
+                  size="sm"
+                  disabled={!isSpeaking} // Disable if not speaking
+                >
+                  Stop
+                </Button>
+              )}
+            </div>
+          )}
       </div>
       <div className="grow">
         <div className="h-[400px] overflow-auto whitespace-pre-wrap">
@@ -221,17 +230,19 @@ const Chat = () => {
                 key={index}
                 className={cn(
                   "message flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
-                  index % 2 === 0 ? "ml-auto bg-neutral-950" : "bg-neutral-700",
+                  message.role === "user"
+                    ? "ml-auto bg-neutral-950"
+                    : "bg-neutral-700",
                 )}
               >
-                {index % 2 === 0 ? (
-                  message
+                {message.role === "user" ? (
+                  message.text
                 ) : (
                   <Markdown
                     remarkPlugins={[remarkGfm]}
                     components={{ a: CustomLink }}
                   >
-                    {message}
+                    {message.text}
                   </Markdown>
                 )}
               </div>
