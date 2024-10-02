@@ -46,7 +46,9 @@ const systemPrompt =
   " respond with the worker to act next. Each worker will perform a" +
   " task and respond with their results and status. When finished," +
   " respond with FINISH." +
-  " IMPORTANT: limit yourself to the most useful worker and use only 1 or 2 workers at best";
+  ` IMPORTANT:
+      1) Limit yourself to the most useful worker and use only 1 or 2 workers at best"
+      2) You should prioritize reaching out to the Socratic teacher more frequently, and only involve other workers when you believe their expertise aligns best with the task at hand.`;
 const options = [END, ...members];
 
 // Define the routing function
