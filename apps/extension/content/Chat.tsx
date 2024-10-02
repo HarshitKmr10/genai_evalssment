@@ -12,14 +12,18 @@ import {
 } from "../components/ui/select"; // Import Shadcn components
 import { Button } from "../components/ui/button";
 import { askDSATutor } from "../features/script";
-import { extractProblemText, extractUserCodeText } from "./leetcode";
+import {
+  extractProblemText,
+  extractTitleSlug,
+  extractUserCodeText,
+} from "./leetcode";
 
 type CustomLinkProps = {
   href?: string;
   children?: React.ReactNode;
 };
 
-type Message = {
+export type Message = {
   role: "user" | "assistant";
   text: string;
 };
@@ -83,7 +87,11 @@ const Chat = () => {
   }
 
   function userCannotSendMessage() {
-    return textareaRef.current!.value === "" || chatLoading;
+    return (
+      chatMessages.at(-1)?.role === "user" ||
+      textareaRef.current!.value === "" ||
+      chatLoading
+    );
   }
 
   function handleClick() {
@@ -96,9 +104,10 @@ const Chat = () => {
     setChatMessages((prev) => [...prev, { role: "user", text: message }]);
     textareaRef.current!.value = "";
 
+    const titleSlug = extractTitleSlug();
     if (isFirstMessage.current) {
       const problemStatement = extractProblemText();
-      message += `\n\nProblem Statement:\n${problemStatement}`;
+      message += `\n\nTitleSlug:\n${titleSlug}\nProblem Statement:\n${problemStatement}`;
       isFirstMessage.current = false;
     }
 
@@ -108,19 +117,24 @@ const Chat = () => {
       prevUserCode.current = currentUserCode;
     }
 
-    askQuestion(message);
+    askQuestion(message, titleSlug);
   }
 
-  async function askQuestion(query: string) {
+  async function askQuestion(query: string, titleSlug: string) {
     setChatLoading(true);
-    const response = await askDSATutor(query);
-    if (response) {
-      setChatMessages((prev) => [
-        ...prev,
-        { role: "assistant", text: response },
-      ]);
+    const responseStream = askDSATutor(query, titleSlug);
+    try {
+      for await (const response of responseStream) {
+        setChatMessages((prev) => [
+          ...prev,
+          { role: "assistant", text: response },
+        ]); // Update state with new response
+      }
+    } catch (error) {
+      console.error("Error while streaming responses:", error);
+    } finally {
+      setChatLoading(false);
     }
-    setChatLoading(false);
   }
 
   function speakMessage(message: string, rate: number) {

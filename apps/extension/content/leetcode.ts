@@ -38,3 +38,9 @@ export function extractUserCodeText() {
   );
   return code?.innerText ?? "";
 }
+
+export function extractTitleSlug() {
+  const url = window.location.href;
+  const slug = url.split("/")[2];
+  return slug;
+}

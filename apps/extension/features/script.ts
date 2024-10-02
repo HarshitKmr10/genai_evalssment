@@ -18,6 +18,7 @@ import { hintProviderNode } from "./hint-provider/agent";
 import { challengerNode } from "./challenger/agent";
 import { socraticTeacherNode } from "./socratic-teacher/agent";
 import { alternateSolutionNode } from "./alternate-solution/agent";
+import type { Message } from "../content/Chat";
 
 export const AgentState = Annotation.Root({
   messages: Annotation<BaseMessage[]>({
@@ -67,47 +68,47 @@ const prompt = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("messages"),
 ]);
 
+const formattedPrompt = await prompt.partial({
+  options: options.join(", "),
+  members: members.join(", "),
+});
+
+const supervisorChain = formattedPrompt
+  .pipe(
+    llm.bindTools([routingTool], {
+      tool_choice: "route",
+    }),
+  )
+  .pipe(new JsonOutputToolsParser<AIMessage>())
+  .pipe((x: any) => x[0].args);
+
+const workflow = new StateGraph(AgentState)
+  .addNode("web_scraper", webscraperNode)
+  .addNode("hint_provider", hintProviderNode)
+  .addNode("challenger", challengerNode)
+  .addNode("socratic_teacher", socraticTeacherNode)
+  .addNode("alternate_solution", alternateSolutionNode)
+  .addNode("supervisor", supervisorChain);
+
+members.forEach((member) => {
+  workflow.addEdge(member, "supervisor");
+});
+
+workflow.addConditionalEdges(
+  "supervisor",
+  (x: typeof AgentState.State) => x.next,
+);
+
+workflow.addEdge(START, "supervisor");
+
+const memory = new MemorySaver();
+const graph = workflow.compile({ checkpointer: memory });
+
 // You are a helpful Data Structures and Algorithms teacher. Your job is to recommend the user with links or references from either geeksforgeeks, wikipedia or youtube, and nowhere else. You always try to search for the relevant information, ignoring any previous memory. Do not recommend any information before searching it. Always output the response in markdown format.
 
-export async function askDSATutor(query: string) {
-  const formattedPrompt = await prompt.partial({
-    options: options.join(", "),
-    members: members.join(", "),
-  });
-
-  const supervisorChain = formattedPrompt
-    .pipe(
-      llm.bindTools([routingTool], {
-        tool_choice: "route",
-      }),
-    )
-    .pipe(new JsonOutputToolsParser<AIMessage>())
-    .pipe((x: any) => x[0].args);
-
-  const workflow = new StateGraph(AgentState)
-    .addNode("web_scraper", webscraperNode)
-    .addNode("hint_provider", hintProviderNode)
-    .addNode("challenger", challengerNode)
-    .addNode("socratic_teacher", socraticTeacherNode)
-    .addNode("alternate_solution", alternateSolutionNode)
-    .addNode("supervisor", supervisorChain);
-
-  members.forEach((member) => {
-    workflow.addEdge(member, "supervisor");
-  });
-
-  workflow.addConditionalEdges(
-    "supervisor",
-    (x: typeof AgentState.State) => x.next,
-  );
-
-  workflow.addEdge(START, "supervisor");
-
-  const memory = new MemorySaver();
-  const graph = workflow.compile({ checkpointer: memory });
-
-  let config = { configurable: { thread_id: "conversation-num-1" } };
-  let streamResults = graph.stream(
+export async function* askDSATutor(query: string, titleSlug: string) {
+  let config = { configurable: { thread_id: `conversation-${titleSlug}` } };
+  const streamResults = graph.stream(
     {
       messages: [
         new HumanMessage({
@@ -115,17 +116,25 @@ export async function askDSATutor(query: string) {
         }),
       ],
     },
-    { recursionLimit: 10, ...config },
+    { recursionLimit: 5, ...config },
   );
 
-  let finalOutput = "";
+  // Return the stream of outputs
   for await (const output of await streamResults) {
     if (!output?.__end__) {
-      console.log(output);
-      console.log("----");
-      finalOutput = output;
+      console.log(Object.keys(output));
+      if (output.supervisor) continue;
+      const obj = Object.values(output) as any;
+      let finalOutput = "";
+      console.log(obj);
+      obj[0].messages.forEach(
+        (message: any) => (finalOutput += "\n" + message.content),
+      );
+      console.log(finalOutput);
+      console.log(
+        obj[0].messages.map((message: any) => message.response_metadata),
+      );
+      yield finalOutput as string; // Yield each output as it arrives
     }
   }
-
-  return finalOutput;
 }

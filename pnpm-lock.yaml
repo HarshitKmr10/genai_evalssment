@@ -96,6 +96,9 @@ importers:
       langchain:
         specifier: ^0.3.2
         version: 0.3.2(@langchain/core@0.3.5)(@langchain/google-vertexai@0.1.0)(axios@1.7.7)
+      langsmith:
+        specifier: ^0.1.61
+        version: 0.1.61
       react:
         specifier: ^18.1.0
         version: 18.3.1
