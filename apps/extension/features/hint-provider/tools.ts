@@ -13,7 +13,7 @@ export const highlightText = tool(
       text = text.replace(
         regex,
         (match) =>
-          `<mark className="bg-[#777bf3] bg-opacity-20">${match}</mark>`,
+          `<mark className="bg-[#E8B663] bg-opacity-20">${match}</mark>`,
       );
     });
 
@@ -45,7 +45,8 @@ export const highlightTextInLeetCode = tool(
       const regex = new RegExp(`(${keyword})`, "gi");
       highlightedHtml = highlightedHtml.replace(
         regex,
-        (match) => `<mark style="background-color: #ffff0069;">${match}</mark>`,
+        (match) =>
+          `<mark style="background-color: #E8B6634D; color: white;">${match}</mark>`,
       );
     });
 

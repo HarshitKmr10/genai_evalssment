@@ -49,7 +49,9 @@ const systemPrompt =
   ` IMPORTANT:
       1) Limit yourself to the most useful worker and use only 1 or 2 workers at best"
       2) You should prioritize reaching out to the Socratic teacher more frequently, and only involve other workers when you believe their expertise aligns best with the task at hand.
-      3) Whenever user asks for references or resources, you need to call web_scraper`;
+      3) Whenever user asks for references or resources, you need to call web_scraper
+      4) If user asks for important words then use hint_provider. If already used once in chat history then always use socratic_teacher`;
+
 const options = [END, ...members];
 
 // Define the routing function
