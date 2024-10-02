@@ -33,7 +33,7 @@ export const getRelatedArticlesFromGFG = tool(
           });
         });
 
-      return searchResults;
+      return JSON.stringify(searchResults);
     } catch (error) {
       console.error("Error fetching data from GeeksforGeeks:", error);
       return [];
@@ -78,7 +78,7 @@ export const getRelatedArticlesFromWikipedia = tool(
           });
         });
 
-      return searchResults;
+      return JSON.stringify(searchResults);
     } catch (error) {
       console.error("Error fetching data from Wikipedia:", error);
       return [];

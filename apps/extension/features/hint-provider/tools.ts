@@ -75,10 +75,10 @@ export const fetchOfficialSolution = tool(
         let { content } = solutionData;
         const relevantSolution = extractRelevantSolution(content);
 
-        return {
+        return JSON.stringify({
           solution: relevantSolution,
           url: `https://leetcode.com/problems/${input.titleSlug}/solution/`,
-        };
+        });
       } else {
         console.warn("No solution found for the given problem.");
         return null;

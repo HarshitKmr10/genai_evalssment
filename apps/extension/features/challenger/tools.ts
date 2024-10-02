@@ -25,10 +25,10 @@ export const fetchSimilarProblems = tool(
 
       console.log(similarQuestionsWithUrls);
 
-      return {
+      return JSON.stringify({
         ...data,
         similarQuestions: similarQuestionsWithUrls,
-      };
+      });
     } catch (error) {
       console.error("Error fetching LeetCode question info:", error);
       throw new Error("Failed to fetch LeetCode question information");
