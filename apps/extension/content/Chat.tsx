@@ -88,7 +88,6 @@ const Chat = () => {
 
   function userCannotSendMessage() {
     return (
-      chatMessages.at(-1)?.role === "user" ||
       textareaRef.current!.value === "" ||
       chatLoading
     );
