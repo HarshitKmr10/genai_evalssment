@@ -12,6 +12,7 @@ import {
 } from "../components/ui/select"; // Import Shadcn components
 import { Button } from "../components/ui/button";
 import { askDSATutor } from "../features/script";
+import { extractProblemText, extractUserCodeText } from "./leetcode";
 
 type CustomLinkProps = {
   href?: string;
@@ -45,9 +46,11 @@ const Chat = () => {
   const [utterance, setUtterance] = useState<SpeechSynthesisUtterance | null>(
     null,
   );
-  const [speechRate, setSpeechRate] = useState(1.2); // Default speech rate
+  const [speechRate, setSpeechRate] = useState(1); // Default speech rate
   const [currentPosition, setCurrentPosition] = useState(0);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const isFirstMessage = useRef(true);
+  const prevUserCode = useRef("");
 
   useEffect(() => {
     if (chatMessages.length === 0) return;
@@ -89,9 +92,22 @@ const Chat = () => {
   }
 
   function addUserMessage() {
-    const message = textareaRef.current!.value;
+    let message = textareaRef.current!.value;
     setChatMessages((prev) => [...prev, { role: "user", text: message }]);
     textareaRef.current!.value = "";
+
+    if (isFirstMessage.current) {
+      const problemStatement = extractProblemText();
+      message += `\n\nProblem Statement:\n${problemStatement}`;
+      isFirstMessage.current = false;
+    }
+
+    const currentUserCode = extractUserCodeText();
+    if (prevUserCode.current !== currentUserCode) {
+      message += `\n\nCurrent User Code:\n${currentUserCode}`;
+      prevUserCode.current = currentUserCode;
+    }
+
     askQuestion(message);
   }
 
