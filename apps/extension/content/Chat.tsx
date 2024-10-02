@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { PaperPlaneIcon, ReloadIcon } from "@radix-ui/react-icons";
 import { cn } from "../lib/utils";
-import { highlightWords } from "../features/highlightWords";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -12,6 +11,7 @@ import {
   SelectItem,
 } from "../components/ui/select"; // Import Shadcn components
 import { Button } from "../components/ui/button";
+import { askDSATutor } from "../features/script";
 
 type CustomLinkProps = {
   href?: string;
@@ -92,7 +92,7 @@ const Chat = () => {
 
   async function askQuestion(query: string) {
     setChatLoading(true);
-    const response = await highlightWords(query);
+    const response = await askDSATutor(query);
     if (response) {
       setChatMessages((prev) => [...prev, response]);
     }
