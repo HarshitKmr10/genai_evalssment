@@ -18,17 +18,14 @@ export const fetchSimilarProblems = tool(
       const similarQuestions = JSON.parse(data.similarQuestions || "[]");
       const similarQuestionsWithUrls = similarQuestions.map(
         (question: any) => ({
-          ...question,
+          title: question.title,
           url: `https://leetcode.com/problems/${question.titleSlug}`,
         }),
       );
 
       console.log(similarQuestionsWithUrls);
 
-      return JSON.stringify({
-        ...data,
-        similarQuestions: similarQuestionsWithUrls,
-      });
+      return JSON.stringify(similarQuestionsWithUrls);
     } catch (error) {
       console.error("Error fetching LeetCode question info:", error);
       throw new Error("Failed to fetch LeetCode question information");
