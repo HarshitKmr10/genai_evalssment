@@ -7,6 +7,11 @@ Empower your LeetCode journey with a mentor that stimulates inquiring, reflectio
 
 Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
 
+### Set up environment variables
+1) Copy the .env.example file inside `apps/extension` folder
+2) Paste it in the same location and rename it to `.env`
+3) Add your Google Vertex AI and Tavily API key
+
 ### Build
 
 To build the chrome extension, run the following command:
